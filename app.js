@@ -193,15 +193,21 @@ function cycleWeather() {
 
 // Terminal Logging
 const terminal = document.getElementById('data-terminal');
-const logs = ["FETCHING FIT API...", "PARSING HR VARIANCE...", "OPENWEATHER SYNC...", "NORMALIZING JSON...", "CALCULATING DELTAS..."];
-let i = 0;
 setInterval(() => {
+    const logTypes = [
+        () => `{"src":"FitAPI","act":"${state.activity}","dur_m":${state.duration},"sync":true}`,
+        () => `{"src":"MacroNet","temp":${macroWeather.temp},"aqi":${macroWeather.aqi}}`,
+        () => `{"src":"OraCore","zone":"${state.environment}","strain":"${ui.strainPercent.innerText}"}`,
+        () => `{"src":"EdgeAI","latency_ms":${Math.floor(Math.random()*14+2)},"status":"OK"}`
+    ];
     const p = document.createElement('div');
-    p.innerText = `[${new Date().toISOString().split('T')[1].slice(0,-1)}] ${logs[i % logs.length]}`;
+    p.style.color = Math.random() > 0.8 ? "var(--trading-blue)" : "var(--trading-green)"; // Occasional blue highlight
+    const logFunc = logTypes[Math.floor(Math.random() * logTypes.length)];
+    p.innerText = `[${new Date().toISOString().split('T')[1].slice(0,-1)}] ${logFunc()}`;
     terminal.appendChild(p);
-    if(terminal.childElementCount > 6) terminal.removeChild(terminal.firstChild);
-    i++;
-}, 1200);
+    if(terminal.childElementCount > 8) terminal.removeChild(terminal.firstChild);
+    terminal.scrollTop = terminal.scrollHeight;
+}, 850);
 
 // Init
 runExtrapolation();
