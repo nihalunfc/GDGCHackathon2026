@@ -1,74 +1,39 @@
 // State
 let state = {
-    environment: 'outdoor', // outdoor, park, indoor
-    activity: 'walking', // walking, standing, sitting
-    duration: 45, // minutes
+    environment: 'outdoor',
+    activity: 'walking',
+    duration: 45,
     hasWearOS: false
 };
 
-// Simulated Data Directory (Dynamic Weather Conditions)
+// Weather Database
 const weatherDatabase = [
-    { name: "Summer Heatwave", temp: 35.0, humidity: 65, wind: 5, aqi: 85, uv: 10, alert: "⚠️ WARNING: Extreme Heat Advisory Active" },
-    { name: "Approaching Thunderstorm", temp: 24.0, humidity: 85, wind: 40, aqi: 30, uv: 2, alert: "⚡ SEVERE: Thunderstorm Warning Active" },
-    { name: "Winter Blizzard", temp: -8.0, humidity: 90, wind: 55, aqi: 15, uv: 1, alert: "❄️ CRITICAL: Blizzard Warning Active" },
-    { name: "Clear Autumn Day", temp: 18.0, humidity: 45, wind: 10, aqi: 20, uv: 5, alert: "🌪️ Severe Weather: None Detected." },
-    { name: "Tornado Watch", temp: 28.0, humidity: 80, wind: 65, aqi: 40, uv: 3, alert: "🌪️ CRITICAL: Tornado Watch in Effect for 10km Grid" }
+    { name: "Summer Heatwave", temp: 35.0, humidity: 65, wind: 5, aqi: 85, uv: 10, alert: "WARNING: HEAT ADVISORY IN EFFECT" },
+    { name: "Approaching Thunderstorm", temp: 24.0, humidity: 85, wind: 40, aqi: 30, uv: 2, alert: "SEVERE: THUNDERSTORM WARNING" },
+    { name: "Winter Blizzard", temp: -8.0, humidity: 90, wind: 55, aqi: 15, uv: 1, alert: "CRITICAL: BLIZZARD WARNING" },
+    { name: "Clear Autumn Day", temp: 18.0, humidity: 45, wind: 10, aqi: 20, uv: 5, alert: "NORMAL: NO ALERTS" },
+    { name: "Tornado Watch", temp: 28.0, humidity: 80, wind: 65, aqi: 40, uv: 3, alert: "CRITICAL: TORNADO WATCH (10KM GRID)" }
 ];
 let currentConditionIndex = 0;
 let macroWeather = weatherDatabase[0];
 
 // DOM Elements
-const envButtons = {
-    outdoor: document.getElementById('env-outdoor'),
-    park: document.getElementById('env-park'),
-    indoor: document.getElementById('env-indoor')
+const envButtons = { outdoor: document.getElementById('env-outdoor'), park: document.getElementById('env-park'), indoor: document.getElementById('env-indoor') };
+
+const ui = {
+    macroTemp: document.getElementById('macro-temp'), macroHum: document.getElementById('macro-humidity'),
+    macroWind: document.getElementById('macro-wind'), macroAqi: document.getElementById('macro-aqi'), macroUv: document.getElementById('macro-uv'),
+    microTemp: document.getElementById('micro-temp'), microAqi: document.getElementById('micro-aqi'), microWind: document.getElementById('micro-wind'),
+    deltaTemp: document.getElementById('delta-temp'), deltaAqi: document.getElementById('delta-aqi'), deltaWind: document.getElementById('delta-wind'),
+    locDisplay: document.getElementById('current-location'), tickerAlert: document.getElementById('ticker-alert'),
+    aiAlert: document.getElementById('ai-alert'), hydrationBox: document.getElementById('hydration-alert'),
+    confScore: document.getElementById('confidence-score'), actDisplay: document.getElementById('display-activity'),
+    durDisplay: document.getElementById('display-duration'),
+    strainPercent: document.getElementById('threshold-percent'), strainBar: document.getElementById('threshold-bar'),
+    countdown: document.getElementById('countdown-timer')
 };
 
-const macro = {
-    temp: document.getElementById('macro-temp'),
-    humidity: document.getElementById('macro-humidity'),
-    aqi: document.getElementById('macro-aqi'),
-    uv: document.getElementById('macro-uv')
-};
-
-const micro = {
-    temp: document.getElementById('micro-temp'),
-    humidity: document.getElementById('micro-humidity'),
-    wind: document.getElementById('micro-wind'),
-    aqi: document.getElementById('micro-aqi'),
-    uv: document.getElementById('micro-uv')
-};
-
-const locDisplay = document.getElementById('current-location');
-const formulaDisplay = document.getElementById('math-formula');
-const alertBox = document.getElementById('ai-alert');
-const hydrationBox = document.getElementById('hydration-alert');
-const upsellBox = document.getElementById('ai-upsell');
-const confidenceBadge = document.getElementById('confidence-score');
-const severeWeather = document.getElementById('severe-weather');
-const displayActivity = document.getElementById('display-activity');
-const displayDuration = document.getElementById('display-duration');
-
-// Threshold UI
-const thresholdPercent = document.getElementById('threshold-percent');
-const thresholdBar = document.getElementById('threshold-bar');
-const thresholdHint = document.getElementById('threshold-hint');
-
-// Wear OS Toggle
-function toggleWearOS() {
-    state.hasWearOS = !state.hasWearOS;
-    const card = document.getElementById('device-wearos');
-    if (state.hasWearOS) {
-        card.classList.remove('inactive'); card.classList.add('active');
-        card.innerHTML = '<span class="device-icon">⌚</span> Wear OS Connected';
-    } else {
-        card.classList.remove('active'); card.classList.add('inactive');
-        card.innerHTML = '<span class="device-icon">⌚</span> Wear OS (Click)';
-    }
-    runExtrapolation();
-}
-
-// Environment Toggle
+// Toggle logic
 function setEnvironment(env) {
     state.environment = env;
     Object.values(envButtons).forEach(btn => btn.classList.remove('active'));
@@ -76,244 +41,149 @@ function setEnvironment(env) {
     runExtrapolation();
 }
 
-// Activity & Duration Updates
+function toggleWearOS() {
+    state.hasWearOS = !state.hasWearOS;
+    const btn = document.getElementById('device-wearos');
+    btn.classList.toggle('active', state.hasWearOS);
+    runExtrapolation();
+}
+
 function updateDuration(val) {
     state.duration = parseInt(val);
     runExtrapolation();
 }
+document.getElementById('activity-select').addEventListener('change', (e) => { state.activity = e.target.value; runExtrapolation(); });
 
-document.getElementById('activity-select').addEventListener('change', (e) => {
-    state.activity = e.target.value;
-    runExtrapolation();
-});
-
-// The Extrapolation Engine Logic
+// Math engine
 function runExtrapolation() {
-    let mTemp = macroWeather.temp;
-    let mHum = macroWeather.humidity;
-    let mWind = macroWeather.wind;
-    let mAqi = macroWeather.aqi;
-    let mUv = macroWeather.uv;
+    let mTemp = macroWeather.temp; let mWind = macroWeather.wind; let mAqi = macroWeather.aqi;
+    let microTemp = mTemp; let microWind = mWind; let microAqi = mAqi;
+
+    ui.macroTemp.innerText = mTemp.toFixed(1); ui.macroHum.innerText = macroWeather.humidity;
+    ui.macroWind.innerText = mWind; ui.macroAqi.innerText = mAqi; ui.macroUv.innerText = macroWeather.uv;
     
-    let mathText = "";
+    let tickerMsg = macroWeather.alert;
+    ui.tickerAlert.className = tickerMsg.includes("NORMAL") ? "text-green" : "text-red";
 
-    // Update Macro Display
-    macro.temp.innerText = `${mTemp.toFixed(1)}°C`;
-    macro.humidity.innerText = `${mHum}%`;
-    macro.aqi.innerText = `${mAqi}`;
-    macro.uv.innerText = `${mUv}`;
-
-    severeWeather.innerText = macroWeather.alert;
-    severeWeather.className = macroWeather.alert.includes("None Detected") ? "severe-weather safe" : "severe-weather danger";
-
-    // 100m Extrapolation Math based on Environment
     if (state.environment === 'outdoor') {
-        locDisplay.innerText = "Location: Sector 4 - Downtown Asphalt";
-        
-        mTemp += 2.5; 
-        mWind -= 5;
-        mAqi = 120; // Near traffic
-        mUv = 8; // Full reflection
-        mathText = "Albedo:+2.5°C | Traffic AQI:120";
+        ui.locDisplay.innerText = "LOC: ASPHALT SECTOR";
+        microTemp += 2.5; microWind -= 5; microAqi = 120;
     } else if (state.environment === 'park') {
-        locDisplay.innerText = "Location: Sector 7 - Urban Park Canopy";
-        
-        mTemp -= 1.5;
-        mHum += 15;
-        mAqi = 35; // Trees filter air
-        mUv = 3; // Canopy shade
-        mathText = "Canopy:-1.5°C | Bio-AQI:35";
+        ui.locDisplay.innerText = "LOC: URBAN PARK";
+        microTemp -= 1.5; microWind -= 10; microAqi = 35;
     } else if (state.environment === 'indoor') {
-        locDisplay.innerText = "Location: Sector 2 - Indoor Factory Zone";
-        if (!macroWeather.alert.includes("None Detected")) {
-             severeWeather.innerText = macroWeather.alert + " (Ignored due to Indoor inference)";
-        }
-        
-        mTemp = 26.0; // HVAC
-        mHum = 30; // Dry air
-        mWind = 0;
-        mAqi = 85; // Indoor dust/machinery
-        mUv = 0;
-        mathText = "Indoor HVAC & Concrete Insulation Override";
+        ui.locDisplay.innerText = "LOC: INDOOR FACTORY";
+        microTemp = 26.0; microWind = 0; microAqi = 85;
+        if(!tickerMsg.includes("NORMAL")) tickerMsg += " (ISOLATED: INDOOR)";
     }
-
-    // Update display pills
-    displayActivity.innerText = state.activity.toUpperCase();
-    let hours = Math.floor(state.duration / 60);
-    let mins = state.duration % 60;
-    displayDuration.innerText = hours > 0 ? `${hours}h ${mins}m` : `${mins} MINS`;
-
-    // Update UI
-    micro.temp.innerText = `${mTemp.toFixed(1)}°C`;
-    micro.humidity.innerText = `${mHum}%`;
-    micro.wind.innerText = `${mWind} km/h`;
-    micro.aqi.innerText = `${mAqi}`;
-    micro.uv.innerText = `${mUv}`;
-    formulaDisplay.innerHTML = mathText;
     
-    // Style AQI based on value
-    micro.aqi.style.color = mAqi > 100 ? "var(--alert-orange)" : "var(--accent-green)";
+    ui.tickerAlert.innerText = tickerMsg;
 
-    // Run AI and Threshold Logic
-    calculateThresholds(mTemp, mHum);
+    // Update Delta Grid
+    ui.microTemp.innerText = microTemp.toFixed(1);
+    updateDelta(ui.deltaTemp, microTemp - mTemp, "°C");
+    
+    ui.microAqi.innerText = microAqi;
+    updateDelta(ui.deltaAqi, microAqi - mAqi, " AQI");
+    
+    ui.microWind.innerText = microWind;
+    updateDelta(ui.deltaWind, microWind - mWind, " KM/H");
+
+    ui.actDisplay.innerText = state.activity.toUpperCase();
+    let hours = Math.floor(state.duration / 60); let mins = state.duration % 60;
+    ui.durDisplay.innerText = hours > 0 ? `${hours}H ${mins}M` : `${mins}M`;
+
+    calculateThresholds(microTemp);
 }
 
-function calculateThresholds(temp, humidity) {
+function updateDelta(element, diff, suffix) {
+    if (diff > 0) { element.innerText = `▲ +${diff.toFixed(1)}${suffix}`; element.className = "delta-change up"; }
+    else if (diff < 0) { element.innerText = `▼ ${diff.toFixed(1)}${suffix}`; element.className = "delta-change down"; }
+    else { element.innerText = `— 0.0${suffix}`; element.className = "delta-change neutral"; }
+}
+
+function calculateThresholds(temp) {
     let strain = 0;
-    
-    // Base strain from activity
-    if (state.activity === 'walking') strain += (state.duration / 120) * 100; // 2 hours = 100%
-    if (state.activity === 'standing') strain += (state.duration / 360) * 100; // 6 hours = 100%
-    if (state.activity === 'sitting') strain += (state.duration / 720) * 100; // 12 hours = 100%
+    if (state.activity === 'walking') strain += (state.duration / 120) * 100;
+    if (state.activity === 'standing') strain += (state.duration / 360) * 100;
+    if (state.activity === 'sitting') strain += (state.duration / 720) * 100;
 
-    // Multipliers based on micro-climate
     if (temp > 29) strain *= 1.3;
-    if (humidity > 55) strain *= 1.1;
-
-    // Cap at 100%
     strain = Math.min(Math.round(strain), 100);
 
-    // Update Threshold UI
-    thresholdPercent.innerText = `${strain}%`;
-    thresholdBar.style.width = `${strain}%`;
+    ui.strainPercent.innerText = `${strain}%`;
+    ui.strainBar.style.width = `${strain}%`;
     
-    if (strain < 50) {
-        thresholdBar.className = "progress-bar-fill safe-bar";
-        thresholdHint.innerText = "Safe to continue activity.";
-    } else if (strain < 85) {
-        thresholdBar.className = "progress-bar-fill warning-bar";
-        thresholdHint.innerText = "Approaching limits. Plan a break soon.";
-    } else {
-        thresholdBar.className = "progress-bar-fill danger-bar";
-        thresholdHint.innerText = "EXHAUSTION VERGE: Stop activity immediately.";
-    }
+    if (strain < 50) { ui.strainBar.className = "gauge-bar-fill safe-bar"; ui.strainPercent.className = "text-green"; }
+    else if (strain < 85) { ui.strainBar.className = "gauge-bar-fill warning-bar"; ui.strainPercent.className = "text-orange"; }
+    else { ui.strainBar.className = "gauge-bar-fill danger-bar"; ui.strainPercent.className = "text-red"; }
 
     generateAIResponse(temp, strain);
 }
 
 function generateAIResponse(temp, strain) {
-    let alertHtml = "";
-    let boxClass = "alert-box safe";
-    let waterMl = 0;
-
-    // Hydration Math: 50ml per 15 mins of activity if temp > 20
-    if (state.activity !== 'sitting') {
-        waterMl = Math.floor(state.duration / 15) * 50;
-        if (temp > 28) waterMl += 100; // Heat bonus
-    }
-
-    // AI Logic Cases (Addressing user concerns)
-    let extremeWeather = !macroWeather.alert.includes("None Detected") && state.environment !== 'indoor';
+    let statusText = "STATUS: SAFE"; let actionText = "ACTION: NONE REQUIRED"; let boxClass = "trading-alert safe";
+    let extremeWeather = !macroWeather.alert.includes("NORMAL") && state.environment !== 'indoor';
     
-    if (extremeWeather && macroWeather.alert.includes("Tornado")) {
-        boxClass = "alert-box danger";
-        alertHtml = `<strong>🌪️ IMMEDIATE SHELTER REQUIRED</strong><br>
-        Tornado Watch in effect. Your 100m radius contains no adequate cover.<br>
-        <strong>Action: STOP WALKING. Proceed immediately to underground shelter.</strong>`;
-    }
-    else if (extremeWeather && macroWeather.alert.includes("Blizzard")) {
-        boxClass = "alert-box danger";
-        alertHtml = `<strong>❄️ EXTREME COLD EXPOSURE</strong><br>
-        Local temp is ${temp.toFixed(1)}°C with high windchill. High risk of hypothermia.<br>
-        <strong>Action: Proceed indoors immediately.</strong>`;
-    }
-    else if (extremeWeather && macroWeather.alert.includes("Thunderstorm")) {
-         boxClass = "alert-box danger";
-         alertHtml = `<strong>⚡ LIGHTNING RISK</strong><br>
-         Your position in an open asphalt grid increases lightning strike probability.<br>
-         <strong>Action: Seek indoor shelter immediately.</strong>`;
-    }
-    else if (strain >= 85) {
-        boxClass = "alert-box danger";
-        let issue = state.activity === 'standing' ? "Vascular failure and deep vein thrombosis" : "Heat exhaustion and muscular failure";
-        alertHtml = `<strong>🚨 CRITICAL INTERVENTION REQUIRED</strong><br>
-        You have reached ${strain}% physical capacity. Continuing to ${state.activity} under current micro-climate conditions highly risks ${issue}.<br>
-        <strong>Action: STOP IMMEDIATELY. Sit down and elevate legs.</strong>`;
-    }
-    else if (state.environment === 'indoor' && state.activity === 'standing' && state.duration > 180) {
-        boxClass = "alert-box warning";
-        alertHtml = `<strong>⚠️ Ergonomic & Vascular Risk</strong><br>
-        Stationary standing indoors for ${state.duration} mins increases venous pressure in the lower extremities.<br>
-        <strong>Action:</strong> Sit down for 10 minutes and perform calf raises.`;
-    }
-    else if (state.environment === 'outdoor' && state.activity === 'walking' && temp > 29) {
-        boxClass = "alert-box warning";
-        alertHtml = `<strong>⚠️ Micro-Climate Heat Stress</strong><br>
-        Walking on asphalt drastically increases heat absorption (Current: ${temp.toFixed(1)}°C).<br>
-        <strong>Action:</strong> Shift your route to a park canopy to lower ambient temperature by ~3°C.`;
-    }
-    else {
-        boxClass = "alert-box safe";
-        alertHtml = `<strong>✅ Status Optimal</strong><br>
-        Your physical strain is low (${strain}%). The Ora AI detects no immediate threats in your 100m radius.`;
+    if (extremeWeather && macroWeather.alert.includes("TORNADO")) {
+        boxClass = "trading-alert danger"; statusText = "STATUS: TORNADO PROXIMITY"; actionText = "ACTION: SEEK UNDERGROUND SHELTER NOW";
+    } else if (extremeWeather && macroWeather.alert.includes("BLIZZARD")) {
+        boxClass = "trading-alert danger"; statusText = "STATUS: HYPOTHERMIA RISK"; actionText = "ACTION: MOVE INDOORS NOW";
+    } else if (extremeWeather && macroWeather.alert.includes("THUNDERSTORM")) {
+        boxClass = "trading-alert danger"; statusText = "STATUS: LIGHTNING RISK"; actionText = "ACTION: SEEK INDOOR SHELTER";
+    } else if (strain >= 85) {
+        boxClass = "trading-alert danger"; statusText = "STATUS: CRITICAL STRAIN"; actionText = "ACTION: CEASE ACTIVITY IMMEDIATELY";
+    } else if (state.environment === 'indoor' && state.activity === 'standing' && state.duration > 180) {
+        boxClass = "trading-alert warning"; statusText = "STATUS: VASCULAR STRESS"; actionText = "ACTION: SIT FOR 10 MINS";
+    } else if (state.environment === 'outdoor' && state.activity === 'walking' && temp > 29) {
+        boxClass = "trading-alert warning"; statusText = "STATUS: HEAT STRESS"; actionText = "ACTION: REROUTE TO PARK CANOPY";
     }
 
-    // Hydration Output
+    ui.aiAlert.className = boxClass;
+    ui.aiAlert.innerHTML = `<div class="alert-status">${statusText}</div><div class="alert-action">${actionText}</div>`;
+    
+    let waterMl = (state.activity !== 'sitting') ? Math.floor(state.duration / 15) * 50 : 0;
+    if (temp > 28 && waterMl > 0) waterMl += 100;
+    
     if (waterMl > 0) {
-        hydrationBox.style.display = 'block';
-        hydrationBox.innerHTML = `💧 <strong>Hydration Protocol:</strong> You have lost significant fluids. Consume <strong>${waterMl}ml</strong> of water immediately.`;
-    } else {
-        hydrationBox.style.display = 'none';
-    }
+        ui.hydrationBox.style.display = 'block';
+        ui.hydrationBox.innerHTML = `<div class="alert-status">HYDRATION PROTOCOL</div><div class="alert-action">ACTION: DRINK ${waterMl}ML NOW</div>`;
+    } else ui.hydrationBox.style.display = 'none';
 
-    // Adjust confidence based on Wear OS
     let confidence = state.hasWearOS ? 99 : 82;
-    if (state.hasWearOS) {
-        upsellBox.style.display = 'none';
-        alertHtml += `<br><br><small><em>*Verified with live heart rate variance from Wear OS.</em></small>`;
-    } else {
-        upsellBox.style.display = 'block';
-        upsellBox.innerHTML = `<strong>Data Gap:</strong> Lacking live cardiovascular variance.<br>Connect a Wear OS smartwatch to unlock 99% probabilistic confidence.`;
+    ui.confScore.innerText = `CONF: ${confidence}%`;
+    ui.confScore.className = confidence > 90 ? "badge text-green" : "badge text-orange";
+}
+
+// 60-second Timer & Weather Cycler
+let timerSeconds = 60;
+setInterval(() => {
+    timerSeconds--;
+    if(timerSeconds < 0) {
+        timerSeconds = 60;
+        cycleWeather();
     }
+    ui.countdown.innerText = `00:${timerSeconds.toString().padStart(2, '0')}`;
+}, 1000);
 
-    // Apply to DOM
-    alertBox.className = boxClass;
-    alertBox.innerHTML = alertHtml;
-    
-    let confColor = confidence > 90 ? "rgba(52, 211, 153, 0.1)" : "rgba(251, 191, 36, 0.1)";
-    let confTextColor = confidence > 90 ? "var(--accent-green)" : "var(--alert-orange)";
-    confidenceBadge.innerHTML = `Confidence: ${confidence}%`;
-    confidenceBadge.style.background = confColor;
-    confidenceBadge.style.color = confTextColor;
-    confidenceBadge.style.borderColor = confTextColor;
-}
-
-// Data Pipeline Terminal Simulator
-const terminal = document.getElementById('data-terminal');
-const logs = [
-    "Fetching Google Fit API... [OK]",
-    "Parsing 12 hours of step data... [OK]",
-    "Polling OpenWeatherMap for 10km grid... [OK]",
-    "Resolving Google Maps Places API... [INDOOR FACTORY DETECTED]",
-    "Normalizing raw JSON payloads...",
-    "Applying Deductive Math Extrapolation...",
-    "Sending Unified Dataset to Gemini Core...",
-    "Awaiting probabilistic output..."
-];
-
-function simulateTerminal() {
-    let i = 0;
-    setInterval(() => {
-        const p = document.createElement('p');
-        p.innerText = `> ${new Date().toISOString().split('T')[1].slice(0,-1)}: ${logs[i % logs.length]}`;
-        terminal.appendChild(p);
-        if(terminal.childElementCount > 10) terminal.removeChild(terminal.firstChild);
-        i++;
-    }, 1500);
-}
-
-// Weather Cycler
 function cycleWeather() {
     currentConditionIndex = (currentConditionIndex + 1) % weatherDatabase.length;
     macroWeather = weatherDatabase[currentConditionIndex];
+    timerSeconds = 60; // Reset timer if forced
     runExtrapolation();
 }
 
-// Automatically shift weather every 60 seconds
+// Terminal Logging
+const terminal = document.getElementById('data-terminal');
+const logs = ["FETCHING FIT API...", "PARSING HR VARIANCE...", "OPENWEATHER SYNC...", "NORMALIZING JSON...", "CALCULATING DELTAS..."];
+let i = 0;
 setInterval(() => {
-    cycleWeather();
-}, 60000);
+    const p = document.createElement('div');
+    p.innerText = `[${new Date().toISOString().split('T')[1].slice(0,-1)}] ${logs[i % logs.length]}`;
+    terminal.appendChild(p);
+    if(terminal.childElementCount > 6) terminal.removeChild(terminal.firstChild);
+    i++;
+}, 1200);
 
-// Initial Run
+// Init
 runExtrapolation();
-simulateTerminal();
