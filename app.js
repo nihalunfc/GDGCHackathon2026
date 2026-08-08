@@ -6,6 +6,26 @@ let state = {
     hasWearOS: false
 };
 
+// Location State
+let realLocation = "LOC: AWAITING GPS...";
+if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude.toFixed(4);
+            const lon = position.coords.longitude.toFixed(4);
+            realLocation = `LOC: [${lat}, ${lon}]`;
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                .then(res => res.json())
+                .then(data => {
+                    const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+                    if (city) realLocation = `LOC: ${city.toUpperCase()} [${lat}, ${lon}]`;
+                    runExtrapolation();
+                }).catch(() => runExtrapolation());
+        },
+        (error) => { realLocation = "LOC: GPS DENIED"; runExtrapolation(); }
+    );
+}
+
 // Weather Database
 const weatherDatabase = [
     { name: "Summer Heatwave", temp: 35.0, humidity: 65, wind: 5, aqi: 85, uv: 10, alert: "WARNING: HEAT ADVISORY IN EFFECT" },
@@ -66,16 +86,14 @@ function runExtrapolation() {
     ui.tickerAlert.className = tickerMsg.includes("NORMAL") ? "text-green" : "text-red";
 
     if (state.environment === 'outdoor') {
-        ui.locDisplay.innerText = "LOC: ASPHALT SECTOR";
         microTemp += 2.5; microWind -= 5; microAqi = 120;
     } else if (state.environment === 'park') {
-        ui.locDisplay.innerText = "LOC: URBAN PARK";
         microTemp -= 1.5; microWind -= 10; microAqi = 35;
     } else if (state.environment === 'indoor') {
-        ui.locDisplay.innerText = "LOC: INDOOR FACTORY";
         microTemp = 26.0; microWind = 0; microAqi = 85;
         if(!tickerMsg.includes("NORMAL")) tickerMsg += " (ISOLATED: INDOOR)";
     }
+    ui.locDisplay.innerText = `${realLocation} | ZONE: ${state.environment.toUpperCase()}`;
     
     ui.tickerAlert.innerText = tickerMsg;
 
