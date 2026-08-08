@@ -4,6 +4,8 @@ Build with AI: Innovation Challenge 2026 Submission
 Challenge Area: Healthcare, Productivity, & Smart Cities
 Developer: Nihal
 
+🔗 **Live Prototype Demo:** [https://nihalunfc.github.io/GDGCHackathon2026/](https://nihalunfc.github.io/GDGCHackathon2026/)
+
 ---
 
 ## Elevator Pitch
