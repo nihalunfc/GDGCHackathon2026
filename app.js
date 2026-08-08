@@ -36,6 +36,8 @@ const weatherDatabase = [
 ];
 let currentConditionIndex = 0;
 let macroWeather = weatherDatabase[0];
+let lastAlertHash = "";
+let lastHydroHash = "";
 
 // DOM Elements
 const envButtons = { outdoor: document.getElementById('env-outdoor'), park: document.getElementById('env-park'), indoor: document.getElementById('env-indoor') };
@@ -160,13 +162,29 @@ function generateAIResponse(temp, strain) {
     ui.aiAlert.className = boxClass;
     ui.aiAlert.innerHTML = `<div class="alert-status">${statusText}</div><div class="alert-action">${actionText}</div>`;
     
+    // Toast for AI Alert
+    let currentHash = statusText + actionText;
+    if (currentHash !== lastAlertHash) {
+        lastAlertHash = currentHash;
+        if (boxClass.includes('danger')) showToast("🚨 " + statusText, actionText, "danger");
+        else if (boxClass.includes('warning')) showToast("⚠️ " + statusText, actionText, "warning");
+    }
+
     let waterMl = (state.activity !== 'sitting') ? Math.floor(state.duration / 15) * 50 : 0;
     if (temp > 28 && waterMl > 0) waterMl += 100;
     
+    let hydroHash = "water" + waterMl;
     if (waterMl > 0) {
         ui.hydrationBox.style.display = 'block';
         ui.hydrationBox.innerHTML = `<div class="alert-status">HYDRATION PROTOCOL</div><div class="alert-action">ACTION: DRINK ${waterMl}ML NOW</div>`;
-    } else ui.hydrationBox.style.display = 'none';
+        if (hydroHash !== lastHydroHash) {
+            lastHydroHash = hydroHash;
+            showToast("💧 HYDRATION ALERT", `ACTION: DRINK ${waterMl}ML NOW`, "info");
+        }
+    } else {
+        ui.hydrationBox.style.display = 'none';
+        lastHydroHash = "water0";
+    }
 
     let confidence = state.hasWearOS ? 99 : 82;
     ui.confScore.innerText = `CONF: ${confidence}%`;
@@ -208,6 +226,16 @@ setInterval(() => {
     if(terminal.childElementCount > 8) terminal.removeChild(terminal.firstChild);
     terminal.scrollTop = terminal.scrollHeight;
 }, 850);
+
+function showToast(title, message, type) {
+    const container = document.getElementById('toast-container');
+    if(!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-msg">${message}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 5000);
+}
 
 // Init
 runExtrapolation();
