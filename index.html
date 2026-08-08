@@ -70,10 +70,10 @@
                         <span class="badge gray">OpenWeatherMap</span>
                     </div>
                     <div class="weather-stats">
-                        <div class="stat"><span class="label">Temp</span><span class="value">28.0°C</span></div>
-                        <div class="stat"><span class="label">Humidity</span><span class="value">45%</span></div>
-                        <div class="stat"><span class="label">AQI</span><span class="value">50 (Good)</span></div>
-                        <div class="stat"><span class="label">UV Index</span><span class="value">6 (High)</span></div>
+                        <div class="stat"><span class="label">Temp</span><span class="value" id="macro-temp">28.0°C</span></div>
+                        <div class="stat"><span class="label">Humidity</span><span class="value" id="macro-humidity">45%</span></div>
+                        <div class="stat"><span class="label">AQI</span><span class="value" id="macro-aqi">50</span></div>
+                        <div class="stat"><span class="label">UV Index</span><span class="value" id="macro-uv">6</span></div>
                     </div>
                 </div>
 
@@ -133,6 +133,9 @@
                             </div>
                             <div class="control-group">
                                 <input type="range" id="duration-slider" min="5" max="480" step="5" value="45" oninput="updateDuration(this.value)">
+                            </div>
+                            <div class="control-group">
+                                <button onclick="cycleWeather()" style="background: var(--accent-purple); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: bold; margin-top: 6px;">Simulate Weather Shift</button>
                             </div>
                         </div>
                     </div>

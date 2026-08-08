@@ -6,20 +6,29 @@ let state = {
     hasWearOS: false
 };
 
-// Base Macro Weather (Simulating City Grid)
-const macroWeather = {
-    temp: 28.0,
-    humidity: 45,
-    wind: 15,
-    aqi: 50,
-    uv: 6
-};
+// Simulated Data Directory (Dynamic Weather Conditions)
+const weatherDatabase = [
+    { name: "Summer Heatwave", temp: 35.0, humidity: 65, wind: 5, aqi: 85, uv: 10, alert: "⚠️ WARNING: Extreme Heat Advisory Active" },
+    { name: "Approaching Thunderstorm", temp: 24.0, humidity: 85, wind: 40, aqi: 30, uv: 2, alert: "⚡ SEVERE: Thunderstorm Warning Active" },
+    { name: "Winter Blizzard", temp: -8.0, humidity: 90, wind: 55, aqi: 15, uv: 1, alert: "❄️ CRITICAL: Blizzard Warning Active" },
+    { name: "Clear Autumn Day", temp: 18.0, humidity: 45, wind: 10, aqi: 20, uv: 5, alert: "🌪️ Severe Weather: None Detected." },
+    { name: "Tornado Watch", temp: 28.0, humidity: 80, wind: 65, aqi: 40, uv: 3, alert: "🌪️ CRITICAL: Tornado Watch in Effect for 10km Grid" }
+];
+let currentConditionIndex = 0;
+let macroWeather = weatherDatabase[0];
 
 // DOM Elements
 const envButtons = {
     outdoor: document.getElementById('env-outdoor'),
     park: document.getElementById('env-park'),
     indoor: document.getElementById('env-indoor')
+};
+
+const macro = {
+    temp: document.getElementById('macro-temp'),
+    humidity: document.getElementById('macro-humidity'),
+    aqi: document.getElementById('macro-aqi'),
+    uv: document.getElementById('macro-uv')
 };
 
 const micro = {
@@ -88,11 +97,18 @@ function runExtrapolation() {
     
     let mathText = "";
 
+    // Update Macro Display
+    macro.temp.innerText = `${mTemp.toFixed(1)}°C`;
+    macro.humidity.innerText = `${mHum}%`;
+    macro.aqi.innerText = `${mAqi}`;
+    macro.uv.innerText = `${mUv}`;
+
+    severeWeather.innerText = macroWeather.alert;
+    severeWeather.className = macroWeather.alert.includes("None Detected") ? "severe-weather safe" : "severe-weather danger";
+
     // 100m Extrapolation Math based on Environment
     if (state.environment === 'outdoor') {
         locDisplay.innerText = "Location: Sector 4 - Downtown Asphalt";
-        severeWeather.className = "severe-weather safe";
-        severeWeather.innerText = "🌪️ Severe Weather: None Detected.";
         
         mTemp += 2.5; 
         mWind -= 5;
@@ -101,8 +117,6 @@ function runExtrapolation() {
         mathText = "Albedo:+2.5°C | Traffic AQI:120";
     } else if (state.environment === 'park') {
         locDisplay.innerText = "Location: Sector 7 - Urban Park Canopy";
-        severeWeather.className = "severe-weather safe";
-        severeWeather.innerText = "🌪️ Severe Weather: None Detected.";
         
         mTemp -= 1.5;
         mHum += 15;
@@ -111,9 +125,9 @@ function runExtrapolation() {
         mathText = "Canopy:-1.5°C | Bio-AQI:35";
     } else if (state.environment === 'indoor') {
         locDisplay.innerText = "Location: Sector 2 - Indoor Factory Zone";
-        // Let's add a fake severe weather alert outside to show the contrast
-        severeWeather.className = "severe-weather danger";
-        severeWeather.innerText = "⚠️ OUTDOOR ALERT: Blizzard Warning (Ignored due to Indoor inference)";
+        if (!macroWeather.alert.includes("None Detected")) {
+             severeWeather.innerText = macroWeather.alert + " (Ignored due to Indoor inference)";
+        }
         
         mTemp = 26.0; // HVAC
         mHum = 30; // Dry air
@@ -189,7 +203,27 @@ function generateAIResponse(temp, strain) {
     }
 
     // AI Logic Cases (Addressing user concerns)
-    if (strain >= 85) {
+    let extremeWeather = !macroWeather.alert.includes("None Detected") && state.environment !== 'indoor';
+    
+    if (extremeWeather && macroWeather.alert.includes("Tornado")) {
+        boxClass = "alert-box danger";
+        alertHtml = `<strong>🌪️ IMMEDIATE SHELTER REQUIRED</strong><br>
+        Tornado Watch in effect. Your 100m radius contains no adequate cover.<br>
+        <strong>Action: STOP WALKING. Proceed immediately to underground shelter.</strong>`;
+    }
+    else if (extremeWeather && macroWeather.alert.includes("Blizzard")) {
+        boxClass = "alert-box danger";
+        alertHtml = `<strong>❄️ EXTREME COLD EXPOSURE</strong><br>
+        Local temp is ${temp.toFixed(1)}°C with high windchill. High risk of hypothermia.<br>
+        <strong>Action: Proceed indoors immediately.</strong>`;
+    }
+    else if (extremeWeather && macroWeather.alert.includes("Thunderstorm")) {
+         boxClass = "alert-box danger";
+         alertHtml = `<strong>⚡ LIGHTNING RISK</strong><br>
+         Your position in an open asphalt grid increases lightning strike probability.<br>
+         <strong>Action: Seek indoor shelter immediately.</strong>`;
+    }
+    else if (strain >= 85) {
         boxClass = "alert-box danger";
         let issue = state.activity === 'standing' ? "Vascular failure and deep vein thrombosis" : "Heat exhaustion and muscular failure";
         alertHtml = `<strong>🚨 CRITICAL INTERVENTION REQUIRED</strong><br>
@@ -267,6 +301,18 @@ function simulateTerminal() {
         i++;
     }, 1500);
 }
+
+// Weather Cycler
+function cycleWeather() {
+    currentConditionIndex = (currentConditionIndex + 1) % weatherDatabase.length;
+    macroWeather = weatherDatabase[currentConditionIndex];
+    runExtrapolation();
+}
+
+// Automatically shift weather every 60 seconds
+setInterval(() => {
+    cycleWeather();
+}, 60000);
 
 // Initial Run
 runExtrapolation();
