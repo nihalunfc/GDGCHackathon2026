@@ -147,12 +147,12 @@ input[type=range] { flex: 1; }
     animation: slideIn 0.3s forwards, fadeOut 0.5s 4.5s forwards;
     font-family: 'JetBrains Mono', monospace;
 }
-.toast.danger { border-color: var(--trading-red); background: rgba(255, 51, 102, 0.15); }
-.toast.warning { border-color: var(--trading-orange); background: rgba(255, 170, 0, 0.15); }
-.toast.info { border-color: var(--trading-blue); background: rgba(0, 225, 255, 0.15); }
+.toast.danger { border-color: var(--trading-red); background: #260911; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3); }
+.toast.warning { border-color: var(--trading-orange); background: #2e1f06; box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3); }
+.toast.info { border-color: var(--trading-blue); background: #081a21; box-shadow: 0 4px 15px rgba(0, 225, 255, 0.3); }
 
-.toast-title { font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #fff; }
-.toast-msg { font-size: 10px; color: var(--text-main); line-height: 1.4; }
+.toast-title { font-size: 13px; font-weight: 800; margin-bottom: 6px; color: #fff; letter-spacing: 0.5px; }
+.toast-msg { font-size: 11px; color: #f8fafc; font-weight: 600; line-height: 1.5; }
 
 @keyframes slideIn { to { transform: translateX(0); } }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
