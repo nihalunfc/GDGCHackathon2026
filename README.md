@@ -1,4 +1,4 @@
-# The Wildfire Suppressor: Multi-Agent Drone Swarm 🌲🔥🤖
+# The Wildfire Suppressor: Multi-Agent Drone Swarm
 
 **Build with AI: Innovation Challenge 2026**
 *GDG on Campus – University of Niagara Falls Canada*
@@ -30,7 +30,7 @@ GDGCHackathon2026/
 - [ ] **Phase 2:** Developing the Core RL Swarm Engine in Python.
 - [ ] **Phase 3:** Building the Firebase & Google Maps Web Dashboard.
 - [ ] **Phase 4:** Integrating the Gemini Chatbot Commander.
-- [ ] **Phase 5:** Final Polish and 2-3 minute Demo Video recording.
+- [ ] **Phase 5:** Final Polish and Demo Video recording.
 
 ---
-*Built with ❤️ for the GDG Innovation Challenge 2026.*
+*Developed for the GDG Innovation Challenge 2026.*
