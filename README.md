@@ -33,7 +33,7 @@ GDGCHackathon2026/
 ## The GDG Innovation Challenge Roadmap
 - [x] **Phase 1:** Project Pitch, Repository Setup, and Architecture Mapping.
 - [x] **Phase 2:** Developing the Core WARL Swarm Engine in Python.
-- [ ] **Phase 3:** Building the Firebase & Google Maps Web Dashboard.
+- [x] **Phase 3:** Building the Firebase & Google Maps Web Dashboard.
 - [ ] **Phase 4:** Integrating the Gemini Chatbot Commander.
 - [ ] **Phase 5:** Final Polish and Demo Video recording.
 
