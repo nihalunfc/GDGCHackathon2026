@@ -57,15 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initGrid() {
         grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
-        // Ignite multiple center points to make it look organic
+        // Ignite a larger central cluster to guarantee aggressive spread
         grid[gridSize/2][gridSize/2] = 1;
         grid[gridSize/2 + 1][gridSize/2] = 1;
         grid[gridSize/2][gridSize/2 + 1] = 1;
+        grid[gridSize/2 - 1][gridSize/2 - 1] = 1;
         
-        // Spawn 4 drones at corners
+        // Spawn 3 drones far away in the top-left "Base"
         drones = [
-            { x: 1, y: 1 }, { x: gridSize-2, y: 1 },
-            { x: 1, y: gridSize-2 }, { x: gridSize-2, y: gridSize-2 }
+            { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 }
         ];
         
         timeStep = 0;
@@ -143,16 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function simulationLoop() {
         if (!isRunning) return;
         
-        // 1. Organic Fire Spread
+        // 1. Organic Fire Spread (Aggressive)
         let newGrid = JSON.parse(JSON.stringify(grid));
         for (let y = 1; y < gridSize-1; y++) {
             for (let x = 1; x < gridSize-1; x++) {
                 if (grid[y][x] === 1) {
                     const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
                     dirs.forEach(d => {
-                        // Wind blows slightly South-East (higher probability for positive dx/dy)
-                        let prob = 0.08;
-                        if (d[0] === 1 || d[1] === 1) prob = 0.15; 
+                        // Wind blows South-East heavily
+                        let prob = 0.15;
+                        if (d[0] === 1 || d[1] === 1) prob = 0.35; 
                         
                         if (Math.random() < prob && newGrid[y+d[0]][x+d[1]] === 0) {
                             newGrid[y+d[0]][x+d[1]] = 1;
@@ -164,38 +164,40 @@ document.addEventListener('DOMContentLoaded', () => {
         grid = newGrid;
         
         // 2. Swarm Logic (Seek & Destroy)
-        drones.forEach(drone => {
-            // Find nearest fire
-            let nearestDist = Infinity;
-            let targetX = drone.x;
-            let targetY = drone.y;
-            
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    if (grid[y][x] === 1) {
-                        let dist = Math.abs(x - drone.x) + Math.abs(y - drone.y);
-                        if (dist < nearestDist) {
-                            nearestDist = dist;
-                            targetX = x;
-                            targetY = y;
+        // Drones only move on even timeSteps, making them slower than the fire!
+        if (timeStep % 2 === 0) {
+            drones.forEach(drone => {
+                // Find nearest fire
+                let nearestDist = Infinity;
+                let targetX = drone.x;
+                let targetY = drone.y;
+                
+                for (let y = 0; y < gridSize; y++) {
+                    for (let x = 0; x < gridSize; x++) {
+                        if (grid[y][x] === 1) {
+                            let dist = Math.abs(x - drone.x) + Math.abs(y - drone.y);
+                            if (dist < nearestDist) {
+                                nearestDist = dist;
+                                targetX = x;
+                                targetY = y;
+                            }
                         }
                     }
                 }
-            }
-            
-            // Move one step towards target
-            if (targetX > drone.x) drone.x++;
-            else if (targetX < drone.x) drone.x--;
-            
-            if (targetY > drone.y) drone.y++;
-            else if (targetY < drone.y) drone.y--;
-            
-            // Extinguish strictly the single cell the drone is on top of (1x1 area)
-            // This forces the drones to work harder and creates a realistic tug-of-war
-            if(grid[drone.y][drone.x] === 1) {
-                grid[drone.y][drone.x] = 2; // Drop retardant
-            }
-        });
+                
+                // Move one step towards target
+                if (targetX > drone.x) drone.x++;
+                else if (targetX < drone.x) drone.x--;
+                
+                if (targetY > drone.y) drone.y++;
+                else if (targetY < drone.y) drone.y--;
+                
+                // Extinguish strictly the single cell the drone is on top of (1x1 area)
+                if(grid[drone.y][drone.x] === 1) {
+                    grid[drone.y][drone.x] = 2; // Drop retardant
+                }
+            });
+        }
 
         let currentFire = drawGrid();
         
