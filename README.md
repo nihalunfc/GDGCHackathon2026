@@ -8,6 +8,11 @@ The Wildfire Suppressor is a decentralized, Multi-Agent Reinforcement Learning (
 
 This project tackles a critical Canadian and global crisis—underfunded and inefficient wildfire management—by replacing reactive human coordination with proactive, autonomous swarm intelligence.
 
+## Documentation & Explanation Guides
+Please refer to our interactive notebooks for a complete breakdown of the project architecture and simulation logic:
+1. [01_Problem_Statement_and_Methodology.ipynb](./notebooks/01_Problem_Statement_and_Methodology.ipynb) - Project theory, MDP architecture, and technology stack.
+2. [02_DQN_Wildfire_Training.ipynb](./notebooks/02_DQN_Wildfire_Training.ipynb) - The live generative environment (physics engine) and AI training logic.
+
 ## Repository Structure
 ```
 GDGCHackathon2026/
