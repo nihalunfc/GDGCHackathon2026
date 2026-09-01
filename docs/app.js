@@ -190,14 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetY > drone.y) drone.y++;
             else if (targetY < drone.y) drone.y--;
             
-            // Extinguish area of effect (3x3 drop)
-            for(let dy=-1; dy<=1; dy++) {
-                for(let dx=-1; dx<=1; dx++) {
-                    let ny = drone.y + dy, nx = drone.x + dx;
-                    if(ny>=0 && ny<gridSize && nx>=0 && nx<gridSize && grid[ny][nx] === 1) {
-                        grid[ny][nx] = 2; // Drop retardant
-                    }
-                }
+            // Extinguish strictly the single cell the drone is on top of (1x1 area)
+            // This forces the drones to work harder and creates a realistic tug-of-war
+            if(grid[drone.y][drone.x] === 1) {
+                grid[drone.y][drone.x] = 2; // Drop retardant
             }
         });
 
@@ -213,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         telemetryChart.update();
 
-        setTimeout(simulationLoop, 200); // Faster tick rate for smoothness
+        setTimeout(simulationLoop, 400); // Slower tick rate (400ms) for better viewing
     }
 
     btnStart.addEventListener('click', () => {
