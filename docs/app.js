@@ -57,10 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
         grid[gridSize/2][gridSize/2 + 1] = 1;
         grid[gridSize/2 - 1][gridSize/2 - 1] = 1;
         
-        // Spawn 3 drones far away in the top-left "Base"
-        drones = [
-            { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 }
-        ];
+        // Spawn 12 drones in a tactical cluster at the "Base" (Top-Left)
+        drones = [];
+        for (let i = 0; i < 12; i++) {
+            drones.push({ x: Math.floor(Math.random() * 3), y: Math.floor(Math.random() * 3) });
+        }
+        
+        document.getElementById('metric-drones').innerText = drones.length;
         
         timeStep = 0;
         telemetryChart.data.labels = [];
@@ -149,7 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let y = 0; y < gridSize; y++) {
                     for (let x = 0; x < gridSize; x++) {
                         if (grid[y][x] === 1) {
-                            let dist = Math.abs(x - drone.x) + Math.abs(y - drone.y);
+                            // DECENTRALIZED COORDINATION: 
+                            // Add slight random noise to the distance heuristic so the swarm 
+                            // divides and conquers the fire front instead of clumping on one cell
+                            let dist = Math.abs(x - drone.x) + Math.abs(y - drone.y) + (Math.random() * 8);
                             if (dist < nearestDist) {
                                 nearestDist = dist;
                                 targetX = x;
