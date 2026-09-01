@@ -273,7 +273,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const systemPrompt = `You are the WARL Swarm Commander AI. You oversee a decentralized swarm of autonomous drones fighting a wildfire. Current live status: ${currentFireCount} active fire cells. There are 3 Drones active. The wind is currently blowing aggressively South-East. Answer the user's question briefly (1-2 short paragraphs) and act in character as a highly advanced, analytical AI commander explaining the swarm's tactical Reinforcement Learning decisions. User says: ${text}`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+            // 1. Dynamically discover available models for this specific API key (Bypasses region/project naming differences)
+            const modelListResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            const modelListData = await modelListResponse.json();
+            
+            if (modelListData.error) throw new Error("Model Discovery Failed: " + modelListData.error.message);
+            
+            // 2. Find any valid Gemini model that supports text generation
+            let targetModel = "models/gemini-1.5-flash"; // Fallback
+            if (modelListData.models) {
+                const validModels = modelListData.models.filter(m => 
+                    m.supportedGenerationMethods && 
+                    m.supportedGenerationMethods.includes("generateContent") &&
+                    m.name.includes("gemini")
+                );
+                
+                if (validModels.length === 0) {
+                    throw new Error("No Gemini models supporting text generation were found on your Google Cloud account/region.");
+                }
+                
+                // Prefer flash if available, otherwise take the first available one
+                const flashModel = validModels.find(m => m.name.includes("1.5-flash"));
+                targetModel = flashModel ? flashModel.name : validModels[0].name;
+            }
+
+            // 3. Call the dynamically discovered model
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${targetModel}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
