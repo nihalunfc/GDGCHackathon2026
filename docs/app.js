@@ -93,6 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update DOM Metrics
         fireMetric.innerText = fireCount;
+        
+        // Mathematical Scaler for Real-World Scenarios
+        // Assume 1 cell = 1 Hectare. 
+        // A standard firefighting drone (e.g., DJI Agras T40) carries ~40 Liters.
+        // Assume 1 Hectare of active fire requires ~600 Liters (15 drone payloads) to suppress.
+        let realDronesNeeded = fireCount * 15;
+        document.getElementById('metric-real-drones').innerText = realDronesNeeded;
+
         if (fireCount > 30) {
             statusIndicator.innerText = "CRITICAL SPREAD";
             statusIndicator.className = "danger";
