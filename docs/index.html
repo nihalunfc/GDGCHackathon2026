@@ -43,12 +43,15 @@
         <!-- Right Panel: Gemini Chatbot -->
         <section class="commander-panel">
             <h2>Gemini Swarm Commander</h2>
+            <div style="padding: 0.5rem 1rem; background: #030712; border-bottom: 1px solid var(--border);">
+                <input type="password" id="gemini-api-key" placeholder="Enter Gemini API Key to activate AI..." style="width: 100%; padding: 0.5rem; background: #111827; color: white; border: 1px solid #374151; border-radius: 4px;">
+            </div>
             <div class="chat-window" id="chat-window">
                 <div class="message system">
                     <strong>System:</strong> WARL AI initialized.
                 </div>
                 <div class="message gemini">
-                    <strong>Commander:</strong> I am the Gemini Swarm Commander. I monitor the RL agents in real-time. Ask me why the swarm is making its decisions. *(Note: API Integration pending in Phase 4)*.
+                    <strong>Commander:</strong> I am the Gemini Swarm Commander. I monitor the RL agents in real-time. Ask me why the swarm is making its decisions.
                 </div>
             </div>
             <div class="chat-input">

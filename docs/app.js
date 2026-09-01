@@ -205,16 +205,18 @@ document.addEventListener('DOMContentLoaded', () => {
         initGrid();
     });
     
-    // Mock Chatbot Interaction
+    // Phase 4: Gemini API Integration
     const btnSend = document.getElementById('btn-send');
     const inputField = document.getElementById('chat-input-field');
     const chatWindow = document.getElementById('chat-window');
+    const apiKeyField = document.getElementById('gemini-api-key');
     
-    btnSend.addEventListener('click', () => {
+    btnSend.addEventListener('click', async () => {
         const text = inputField.value.trim();
+        const apiKey = apiKeyField.value.trim();
         if(!text) return;
         
-        // User Message
+        // Render User Message
         const userMsg = document.createElement('div');
         userMsg.className = 'message user';
         userMsg.innerHTML = `<strong>You:</strong> ${text}`;
@@ -222,14 +224,58 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.value = '';
         chatWindow.scrollTop = chatWindow.scrollHeight;
         
-        // Mock Gemini Delay
-        setTimeout(() => {
+        if (!apiKey) {
+            const sysMsg = document.createElement('div');
+            sysMsg.className = 'message system';
+            sysMsg.innerHTML = `<strong>System:</strong> API Key missing. Please enter your Gemini API Key at the top to activate the Swarm Commander.`;
+            chatWindow.appendChild(sysMsg);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return;
+        }
+
+        // Add loading indicator
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message system';
+        loadingMsg.innerHTML = `<strong>System:</strong> Connecting to Gemini Neural Link...`;
+        chatWindow.appendChild(loadingMsg);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        // Prepare Live Context for Gemini (Explainable AI)
+        const currentFireCount = document.getElementById('metric-fire').innerText;
+        const systemPrompt = `You are the WARL Swarm Commander AI. You oversee a decentralized swarm of autonomous drones fighting a wildfire. Current live status: ${currentFireCount} active fire cells. There are 3 Drones active. The wind is currently blowing aggressively South-East. Answer the user's question briefly (1-2 short paragraphs) and act in character as a highly advanced, analytical AI commander explaining the swarm's tactical Reinforcement Learning decisions. User says: ${text}`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: systemPrompt }] }]
+                })
+            });
+
+            const data = await response.json();
+            chatWindow.removeChild(loadingMsg);
+
+            if (data.error) throw new Error(data.error.message);
+
+            const replyText = data.candidates[0].content.parts[0].text;
+            
             const geminiMsg = document.createElement('div');
             geminiMsg.className = 'message gemini';
-            geminiMsg.innerHTML = `<strong>Commander:</strong> Excellent question. In Phase 4, I will be hooked into the Google Gemini API to dynamically analyze the Swarm's Q-Table values and explain our real-time suppression strategy!`;
+            // Convert simple markdown ** to HTML strong
+            let formattedReply = replyText.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+            geminiMsg.innerHTML = `<strong>Commander:</strong> ${formattedReply}`;
             chatWindow.appendChild(geminiMsg);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }, 800);
+        } catch (error) {
+            chatWindow.removeChild(loadingMsg);
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'message system';
+            errorMsg.style.color = '#ef4444';
+            errorMsg.innerHTML = `<strong>Error:</strong> Failed to connect to Gemini API. (${error.message})`;
+            chatWindow.appendChild(errorMsg);
+        }
+        
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     });
     
     inputField.addEventListener('keypress', (e) => {
