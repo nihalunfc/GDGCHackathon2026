@@ -18,23 +18,21 @@ Please refer to our interactive notebooks for a complete breakdown of the projec
 GDGCHackathon2026/
 ├── src/                # Core Python source code for the Swarm RL Environment
 ├── notebooks/          # Jupyter notebooks for training the Deep Q-Network and visualizing convergence
-├── web/                # Firebase front-end (HTML/JS) and Google Maps UI Dashboard
-├── docs/               # Project documentation, architecture diagrams, and submission assets
+├── docs/               # GitHub Pages front-end UI (HTML/JS) and Live Dashboard
 └── README.md           # Project overview and setup instructions
 ```
 
 ## Technologies Used
 - **Google Cloud Platform:** For robust backend hosting and simulation scaling.
-- **Firebase:** For real-time database management and high-performance Web App hosting.
-- **Google Maps Platform:** To render the live Canadian forest map and visualize the drone swarm routing over active fire zones.
+- **Leaflet.js & Esri:** For high-performance, real-time Satellite Imagery mapping over Canadian forests.
 - **Google Gemini API:** An interactive "Swarm Commander" chatbot that allows users to query the AI (e.g., "Why did the swarm route North?") and receive plain-English explanations of the Swarm's mathematical logic.
 - **PyTorch (Gymnasium):** Custom Deep Q-Network for the Wildfire Autonomous Reinforcement Learning (WARL) engine.
 
 ## The GDG Innovation Challenge Roadmap
 - [x] **Phase 1:** Project Pitch, Repository Setup, and Architecture Mapping.
 - [x] **Phase 2:** Developing the Core WARL Swarm Engine in Python.
-- [x] **Phase 3:** Building the Firebase & Google Maps Web Dashboard.
-- [ ] **Phase 4:** Integrating the Gemini Chatbot Commander.
+- [x] **Phase 3:** Building the Live Web Dashboard (GitHub Pages).
+- [x] **Phase 4:** Integrating the Gemini Chatbot Commander.
 - [ ] **Phase 5:** Final Polish and Demo Video recording.
 
 ---
