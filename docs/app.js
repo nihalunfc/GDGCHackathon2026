@@ -8,13 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('simulation-canvas');
     const ctx = canvas.getContext('2d');
     
-    const resizeCanvas = () => {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-    };
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
+    // Use the classic, highly-reliable rendering from V1
     const gridSize = 24; 
     let cellSize = canvas.width / gridSize;
     
@@ -77,28 +71,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawGrid() {
-        cellSize = canvas.width / gridSize; 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         let fireCount = 0;
         
-        // Draw Grid Elements with glow effects
+        // Classic, reliable grid rendering
         for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
                 if (grid[y][x] === 1) { // FIRE
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#ef4444';
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2);
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; 
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
                     fireCount++;
-                } else if (grid[y][x] === 2) { // EXTINGUISHED / RETARDANT
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.4)'; // Blueish retardant
+                } else if (grid[y][x] === 2) { // EXTINGUISHED
+                    ctx.fillStyle = 'rgba(51, 65, 85, 0.6)'; 
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
                 }
             }
         }
-        ctx.shadowBlur = 0; // Reset shadow for drones
 
         // Update DOM Metrics
         fireMetric.innerText = fireCount;
@@ -115,26 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
             statusIndicator.style.color = "";
         }
 
-        // Draw Tactical Drones (Crosshairs)
+        // Classic Drone Rendering (Blue Circles)
+        ctx.fillStyle = '#3b82f6'; 
         drones.forEach(drone => {
-            const centerX = (drone.x * cellSize) + (cellSize/2);
-            const centerY = (drone.y * cellSize) + (cellSize/2);
-            
-            ctx.strokeStyle = '#38bdf8'; // Light blue
-            ctx.lineWidth = 2;
-            
-            // Draw Target Circle
             ctx.beginPath();
-            ctx.arc(centerX, centerY, cellSize/2.5, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            // Draw Crosshair lines
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY - cellSize/1.5);
-            ctx.lineTo(centerX, centerY + cellSize/1.5);
-            ctx.moveTo(centerX - cellSize/1.5, centerY);
-            ctx.lineTo(centerX + cellSize/1.5, centerY);
-            ctx.stroke();
+            ctx.arc((drone.x * cellSize) + (cellSize/2), (drone.y * cellSize) + (cellSize/2), cellSize/3, 0, Math.PI * 2);
+            ctx.fill();
         });
         
         return fireCount;
