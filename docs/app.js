@@ -260,20 +260,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            chatWindow.removeChild(loadingMsg);
+            loadingMsg.remove(); // Safely remove loading indicator
 
             if (data.error) throw new Error(data.error.message);
+            if (!data.candidates || data.candidates.length === 0) throw new Error("Gemini returned an empty response (possible safety filter).");
 
             const replyText = data.candidates[0].content.parts[0].text;
             
             const geminiMsg = document.createElement('div');
             geminiMsg.className = 'message gemini';
             // Convert simple markdown ** to HTML strong
-            let formattedReply = replyText.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+            let formattedReply = replyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             geminiMsg.innerHTML = `<strong>Commander:</strong> ${formattedReply}`;
             chatWindow.appendChild(geminiMsg);
         } catch (error) {
-            chatWindow.removeChild(loadingMsg);
+            loadingMsg.remove(); // Safely remove loading indicator if it still exists
             const errorMsg = document.createElement('div');
             errorMsg.className = 'message system';
             errorMsg.style.color = '#ef4444';
