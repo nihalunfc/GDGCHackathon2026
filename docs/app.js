@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const systemPrompt = `You are the WARL Swarm Commander AI. You oversee a decentralized swarm of autonomous drones fighting a wildfire. Current live status: ${currentFireCount} active fire cells. There are 3 Drones active. The wind is currently blowing aggressively South-East. Answer the user's question briefly (1-2 short paragraphs) and act in character as a highly advanced, analytical AI commander explaining the swarm's tactical Reinforcement Learning decisions. User says: ${text}`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
