@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Leaflet Satellite Map (Niagara Falls coordinates)
+    const map = L.map('satellite-map', {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false
+    }).setView([43.0896, -79.0849], 15);
+
+    // Free Esri World Imagery (No API Key required!)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+    }).addTo(map);
+
     const btnStart = document.getElementById('btn-start');
     const btnReset = document.getElementById('btn-reset');
     const statusIndicator = document.getElementById('metric-status');
